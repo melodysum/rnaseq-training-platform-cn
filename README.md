@@ -1,0 +1,196 @@
+# 🧬 RNA-seq 互动训练平台（中文版）
+
+一个交互式、循序渐进的 Streamlit 网页应用，用于学习 RNA-seq 数据分析——从原始计数到生物学解读。专为初学转录组分析的学生、研究人员和生物信息学工作者设计。
+
+> **教学声明：** 本应用不能替代 DESeq2、edgeR、limma-voom、clusterProfiler、fgsea 或完整的 GSEA 流程。所有分析均以透明的教学模型实现，旨在教授核心概念。对于研究级分析，请使用经过验证的 R/Python 生物信息学工具。
+
+---
+
+## 🚀 快速开始
+
+### 本地运行
+
+```bash
+git clone https://github.com/melodysum/rnaseq-training-platform-cn.git
+cd rnaseq-training-platform-cn
+pip install -r requirements.txt
+streamlit run Home.py
+```
+
+### 在线访问
+[rnaseq-training-platform-cn.streamlit.app](https://rnaseq-training-platform-cn.streamlit.app/)
+
+---
+
+## 📚 课程内容
+
+| # | 课程 | 状态 |
+|---|------|------|
+| 1 | RNA-seq 基础与实验设计 | ✅ 已开放 |
+| 2 | 定量、导入与注释 | ✅ 已开放 |
+| 3 | 低表达基因过滤 | ✅ 已开放 |
+| 4 | 多重检验与 FDR | ✅ 已开放 |
+| 5 | 探索性分析与 PCA | ✅ 已开放 |
+| 6 | 批次效应校正 | ✅ 已开放 |
+| 7 | 差异表达分析 | ✅ 已开放 |
+| 8 | 聚类与热图 | ✅ 已开放 |
+| 9 | 功能富集分析（GO / GSEA） | ✅ 已开放 |
+| 10 | 公共数据与可重复性分析 | ✅ 已开放 |
+| 11 | 单细胞 RNA-seq（入门模块） | ✅ 已开放 |
+
+---
+
+## 📁 输入文件格式
+
+本应用接受两个 CSV 文件：
+
+### counts.csv — 原始基因水平计数矩阵
+
+- **基因为行**，样本为列
+- 第一列 = 基因标识符（用作行索引）
+- 数值必须是**原始整数计数**——不能是 TPM、FPKM 或 CPM
+- 至少需要 2 个样本列和 1 行基因
+
+```
+gene_symbol, D01_control, D01_treatment, D02_control, D02_treatment
+IFNA6,       25,          40,            15,          48
+CAD,          0,           9,            12,          10
+```
+
+### metadata.csv — 样本注释表
+
+- **样本为行**，注释为列
+- 样本名必须与 counts.csv 的列名完全匹配（区分大小写）
+- 至少需要 2 个样本
+
+```
+sample_name,   groupA,    donor, batch,  sex, age
+D01_control,   control,   D01,   batch1, F,   37
+D01_treatment, treatment, D01,   batch1, F,   37
+D02_control,   control,   D02,   batch2, F,   40
+D02_treatment, treatment, D02,   batch2, F,   40
+```
+
+---
+
+## 🏷️ 元数据列要求
+
+| 列名 | 是否必需 | 用途 |
+|------|----------|------|
+| `groupA` | **必需** | 定义所有分析的比较分组 |
+| `donor` | 可选 | 启用配对差异表达分析（第7课） |
+| `batch` | 可选 | 启用批次校正流程（第6课） |
+| `sex`、`age` 等 | 可选 | 描述性信息；在数据集摘要中显示 |
+
+**验证规则：**
+- 两个文件中的重复样本名将被拒绝
+- 重复的基因标识符将被拒绝
+- 非数值计数将被拒绝
+- 负值将被拒绝（计数必须 ≥ 0）
+- 两个文件中的样本名必须完全匹配
+
+---
+
+## 🔬 功能范围
+
+### 第1–8课（Bulk RNA-seq 核心）
+- 原始计数加载与演示数据回退
+- 低表达基因过滤
+- 多重检验 / FDR 校正演示
+- 基于 PCA 的探索性分析
+- 简单线性模型批次校正
+- 教学版差异表达：log-CPM + 配对/非配对 t 检验 + BH FDR
+  - 配对差异表达在检验前按供体对齐样本
+  - 若供体匹配不足，回退到 Welch t 检验
+- 层次聚类和表达热图
+
+### 第9课 — 功能富集分析
+- 内置教学玩具通路库（10 条通路，真实人类基因名）
+- 过度代表性分析（ORA）：Fisher's 精确检验 + BH 校正
+- GSEA 类累积求和富集评分
+- 富集图：累积求和 vs 基因排名，通路命中标记
+- 使用会话中的差异表达结果或演示数据运行（若无前序差异表达结果）
+
+### 第10课 — 公共数据与可重复性
+- 真实 GEO 案例研究（GSE148036、GSE167232）本地存储
+- 交互式可重复性核查清单
+- 计数 vs TPM/FPKM/CPM 说明
+- 网页端 vs 本地 vs HPC 对比表
+- 元数据规范指导
+
+### 第11课 — 单细胞 RNA-seq（入门）
+- 概念介绍：细胞 vs 样本、稀疏性、UMAP、聚类、标记基因
+- 模拟 UMAP 散点图（7 个彩色教学簇）
+- 每簇示例标记基因表
+- Bulk vs scRNA-seq 结构化对比表
+- 明确的"本应用未实现"说明
+
+---
+
+## ⚠️ 教学局限性
+
+本应用专为**教学和中等规模数据集**设计：
+
+- 统计模型已简化（对 log-CPM 进行 t 检验，而非负二项 GLM）
+- 不能替代 DESeq2、edgeR 或 limma-voom 进行差异表达分析
+- 功能富集使用教学用玩具通路，不是真正的 GO/KEGG/MSigDB 数据库
+- 第11课使用模拟 UMAP 数据；未实现真正的 scRNA-seq 流程
+- 会话之间无文件持久化
+- 大型数据集（>5,000 基因 × 200+ 样本）可能运行缓慢或超出浏览器内存
+- 交互式聚类和热图应限制在合理的基因数量内
+
+对于研究级分析，请使用：
+- **差异表达：** DESeq2、edgeR、limma-voom
+- **富集分析：** clusterProfiler、fgsea、GSEA desktop
+- **单细胞：** Scanpy（Python）、Seurat（R）
+- **比对：** STAR、HISAT2、Salmon + tximeta
+- **工作流：** HPC 上的 Snakemake、Nextflow
+
+---
+
+## 📂 项目结构
+
+```
+rnaseq-training-platform-cn/
+├── Home.py                          # 首页 + 数据上传
+├── requirements.txt
+├── data/
+│   ├── counts.csv                   # 内置演示计数矩阵（10,000 基因 × 40 样本）
+│   └── metadata.csv                 # 内置演示元数据（配对设计，20 个供体）
+├── pages/
+│   ├── 01_RNAseq_Foundations.py
+│   ├── 02_Quantification_Import_Annotation.py
+│   ├── 03_Filtering.py
+│   ├── 04_FDR.py
+│   ├── 05_Exploratory_Analysis_PCA.py
+│   ├── 06_Batch_Correction.py
+│   ├── 07_Differential_Expression.py
+│   ├── 08_Clustering_Heatmaps.py
+│   ├── 09_Functional_Enrichment.py
+│   ├── 10_Public_Data.py
+│   └── 11_Single_Cell_RNAseq.py
+└── utils/
+    ├── data_loader.py
+    ├── de_analysis.py
+    ├── enrichment_utils.py
+    ├── batch_effects.py
+    ├── clustering_utils.py
+    ├── exploration.py
+    ├── fdr_demo.py
+    ├── filtering.py
+    ├── pca_utils.py
+    └── simulation.py
+```
+
+---
+
+## 📄 许可证
+
+MIT License。详见 LICENSE 文件。
+
+---
+
+## 🔗 相关链接
+
+- **英文原版：** [rnaseq-training-platform.streamlit.app](https://rnaseq-training-platform.streamlit.app/)
+- **英文 GitHub：** [melodysum/rnaseq-training-platform](https://github.com/melodysum/rnaseq-training-platform)
