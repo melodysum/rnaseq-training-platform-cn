@@ -8,6 +8,35 @@
 
 ## 📋 更新日志
 
+### v2.1 — 2026-04-30
+
+**第9课 — 真实通路数据库支持**
+
+*目的：* 此前实现使用的是教学用玩具通路集，概念演示有效，但缺乏真实生物学意义。本次更新引入 MSigDB 标准通路数据库，使第9课的富集分析结果具备真正的生物学解读价值，而不仅仅是方法论示范。
+
+- 第9课新增通路数据库选择器（单选：教学通路 / Hallmark / C2:CP）
+- utils/enrichment_utils.py 新增 parse_gmt() 和 load_gene_sets() — 解析本地 MSigDB GMT 文件为基因集字典
+- 新增 detect_gene_id_format() — 自动检测输入基因 ID 格式（HGNC 符号或 Ensembl ID），若不匹配 MSigDB 则发出警告
+- data/gene_sets/ 内置两个 MSigDB GMT 文件：
+
+  h.all.v2026.1.Hs.symbols.gmt — MSigDB Hallmark 基因集
+  - 是什么：包含 50 个基因集的精选库，每个基因集代表一种特定、明确的生物学状态或过程（例如：干扰素应答、炎症反应、氧化磷酸化、缺氧）。Hallmark 基因集由计算方法从 MSigDB 其他数千个基因集中提取重叠基因衍生而来，仅保留协调表达的基因，具有低冗余、高内聚的特点。
+  - 为什么选它：Hallmark 是 RNA-seq 富集分析的标准起点。50 条通路数量小、结果易于解读，适合教学演示和数据集的初步生物学探索，在结核病和免疫学研究中被广泛使用。
+  - 来源：Broad Institute 分子特征数据库（MSigDB），人类集合 H。msigdb.org
+  - 版本：v2026.1.Hs（人类，HGNC 基因符号）
+  - 下载时间：2026-04-30
+
+  c2.cp.v2026.1.Hs.symbols.gmt — MSigDB C2:CP 标准通路
+  - 是什么：包含 4115 个基因集，来自多个权威通路数据库的标准生物学通路集合。C2:CP 子集包括：Reactome（1839 条，详细机制通路）、WikiPathways（925 条，社区整理）、KEGG MEDICUS（658 条，代谢与信号通路）、BioCarta（292 条）、PID（196 条）。与 Hallmark 不同，C2:CP 通路直接来源于专家整理的通路数据库，而非从表达数据中计算衍生。
+  - 为什么选它：C2:CP 提供了 Hallmark 所不具备的机制深度。Hallmark 能告知干扰素应答被激活，C2:CP 能进一步区分具体是 REACTOME_INTERFERON_GAMMA_SIGNALING 还是 REACTOME_INTERFERON_ALPHA_BETA_SIGNALING。这种分辨率对结核病研究尤为重要，前缀过滤功能允许聚焦于单一数据库（如仅用 REACTOME_）以避免冗余。
+  - 来源：Broad Institute 分子特征数据库（MSigDB），人类集合 C2，子集 CP。msigdb.org
+  - 版本：v2026.1.Hs（人类，HGNC 基因符号）
+  - 下载时间：2026-04-30
+
+- C2:CP 模式支持前缀过滤（如 REACTOME_、KEGG_、WP_），无需修改代码即可聚焦特定子集
+- 所有 ORA、GSEA-like 和置换检验 GSEA 均自动使用当前选中数据库
+- 教学通路集保留并明确标注为仅供教学使用
+
 ### v2.0 — 2026-04-27
 
 **新增工具模块**
