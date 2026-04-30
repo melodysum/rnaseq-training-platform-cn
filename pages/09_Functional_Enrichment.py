@@ -303,14 +303,15 @@ else:
             "结果仅作说明之用。"
         )
     else:
-        st.info(
-            f"ℹ️ 当前使用 **{gs_display_name}**。"
-            "若没有通路通过 FDR < 0.05，这很可能是因为当前 demo 数据为模拟数据，"
-            "不包含能够富集这些真实通路的生物学信号。"
-            "如需有生物学意义的结果，请上传真实实验数据（例如结核病数据集 GSE167232）。"
-            "这**不代表**代码存在错误。"
-        )
-        with st.expander("📖 为什么没有显著通路？— 统计学解释", expanded=False):
+        if source == "demo":
+            st.info(
+                f"ℹ️ 当前使用 **{gs_display_name}**。"
+                "若没有通路通过 FDR < 0.05，这很可能是因为当前 demo 数据为模拟数据，"
+                "不包含能够富集这些真实通路的生物学信号。"
+                "如需有生物学意义的结果，请上传真实实验数据（例如结核病数据集 GSE167232）。"
+                "这**不代表**代码存在错误。"
+            )
+        with st.expander("📖 为什么没有显著通路？— 统计学解释", expanded=False) if source == "demo" else st.empty():
             st.markdown("""
 **ORA 做了什么**
 
