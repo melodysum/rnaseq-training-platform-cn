@@ -292,10 +292,19 @@ else:
                       annotation_text="padj = 0.05")
     fig_ora.update_layout(height=400)
     st.plotly_chart(fig_ora, use_container_width=True)
-    st.caption(
-        "⚠️ 这些是教学用教学通路，不是真正的 GO 或 KEGG 数据库。"
-        "结果仅作说明之用。"
-    )
+    if gs_key == "toy":
+        st.caption(
+            "⚠️ 这些是教学用教学通路，不是真正的 GO 或 KEGG 数据库。"
+            "结果仅作说明之用。"
+        )
+    else:
+        st.info(
+            f"ℹ️ 当前使用 **{gs_display_name}**。"
+            "若没有通路通过 FDR < 0.05，这很可能是因为当前 demo 数据为模拟数据，"
+            "不包含能够富集这些真实通路的生物学信号。"
+            "如需有生物学意义的结果，请上传真实实验数据（例如结核病数据集 GSE167232）。"
+            "这**不代表**代码存在错误。"
+        )
 
 st.divider()
 
