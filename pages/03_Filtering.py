@@ -313,6 +313,17 @@ with st.expander("⚠️ 为什么不能用 DE 结果来优化阈值？", expand
 **正确做法：** 仅根据文库大小和分组大小确定阈值——与 DE 结果完全无关。
 """)
 
+
+with st.expander("filterByExpr 背后的统计原理", expanded=False):
+    st.markdown(
+        "filterByExpr 只保留表达量达到可进行统计检验水平的基因。"
+        "它从两个维度评判每个基因：(1) 基于中位文库大小动态缩放的 CPM 截止值；"
+        "(2) 样本支持数：基因必须在至少 min_group_size 个样本中超过 CPM 截止值。"
+        "简单计数过滤不考虑文库大小和实验设计。"
+        "低计数基因会在负二项模型中导致方差膨胀，使 logFC 被放大、p 值不可靠。"
+        "过滤还能减少多重检验负担：检验的基因越少，FDR 校正惩罚越低，剩余基因的统计功效越高。"
+    )
+
 col_fe1, col_fe2 = st.columns(2)
 with col_fe1:
     fe_min_count = st.slider(
