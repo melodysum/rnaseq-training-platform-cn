@@ -375,6 +375,119 @@ def get_running_sum(ranked_genes: pd.Series,
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# MSigDB GMT FILE PARSER
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Gene-set source labels (used in the UI)
+GENESET_SOURCES = {
+    "Toy gene sets — educational only":       "toy",
+    "MSigDB Hallmark (50 gene sets)":         "hallmark",
+    "MSigDB C2:CP Canonical Pathways (4115 gene sets)": "c2cp",
+}
+
+HALLMARK_GMT_PATH = "data/gene_sets/h.all.v2026.1.Hs.symbols.gmt"
+C2CP_GMT_PATH     = "data/gene_sets/c2.cp.v2026.1.Hs.symbols.gmt"
+
+
+def parse_gmt(filepath: str) -> dict:
+    """
+    Parse an MSigDB GMT file into a gene-set dictionary.
+
+    GMT format (tab-separated):
+      pathway_name <TAB> description_or_url <TAB> gene1 <TAB> gene2 ...
+
+    Parameters
+    ----------
+    filepath : path to .gmt file (relative to app root or absolute)
+
+    Returns
+    -------
+    dict: {pathway_name: [gene_symbol, ...]}
+
+    Raises
+    ------
+    FileNotFoundError if the file does not exist.
+    """
+    import os
+    if not os.path.exists(filepath):
+        raise FileNotFoundError(
+            f"GMT file not found: {filepath}\n"
+            "Place the MSigDB GMT file in data/gene_sets/ and restart the app."
+        )
+
+    gene_sets = {}
+    with open(filepath, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            parts = line.split("\t")
+            if len(parts) < 3:
+                continue
+            name  = parts[0].strip()
+            genes = list(dict.fromkeys(           # remove duplicates, preserve order
+                g.strip().upper() for g in parts[2:] if g.strip()
+            ))
+            gene_sets[name] = genes
+
+    return gene_sets
+
+
+def load_gene_sets(source_key: str) -> tuple:
+    """
+    Load gene sets based on a source key.
+
+    Parameters
+    ----------
+    source_key : one of 'toy', 'hallmark', 'c2cp'
+
+    Returns
+    -------
+    (gene_sets: dict, label: str, n_sets: int)
+    """
+    if source_key == "toy":
+        return TOY_GENE_SETS, "Toy gene sets (educational)", len(TOY_GENE_SETS)
+
+    path_map = {
+        "hallmark": (HALLMARK_GMT_PATH, "MSigDB Hallmark"),
+        "c2cp":     (C2CP_GMT_PATH,     "MSigDB C2:CP Canonical Pathways"),
+    }
+    if source_key not in path_map:
+        return TOY_GENE_SETS, "Toy gene sets (fallback)", len(TOY_GENE_SETS)
+
+    filepath, label = path_map[source_key]
+    gene_sets = parse_gmt(filepath)
+    return gene_sets, label, len(gene_sets)
+
+
+def detect_gene_id_format(gene_index, n_sample: int = 20) -> str:
+    """
+    Heuristically detect whether gene IDs are HGNC symbols or Ensembl IDs.
+
+    Parameters
+    ----------
+    gene_index : pandas Index of gene identifiers
+    n_sample   : number of genes to sample for detection
+
+    Returns
+    -------
+    'ensembl'  — most IDs start with ENSG
+    'symbol'   — most IDs look like HGNC gene symbols
+    'unknown'  — cannot determine
+    """
+    sample = list(gene_index[:n_sample])
+    n_ensg = sum(1 for g in sample if str(g).startswith("ENSG"))
+    if n_ensg / len(sample) > 0.6:
+        return "ensembl"
+    n_sym = sum(1 for g in sample
+                if str(g).replace("-", "").replace(".", "").isalnum()
+                and not str(g).startswith("ENSG"))
+    if n_sym / len(sample) > 0.5:
+        return "symbol"
+    return "unknown"
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # GSEA WITH PERMUTATION TESTING (added — proper NES + p-values)
 # ══════════════════════════════════════════════════════════════════════════════
 

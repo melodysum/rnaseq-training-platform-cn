@@ -17,15 +17,15 @@
 
 **扩展现有模块** *（所有原有函数均保留）*
 
-- `utils/filtering.py` — 新增 `filter_by_expr()`（edgeR filterByExpr 等价实现：阈值由文库大小和分组大小推导，不依赖 DE 结果）和 `threshold_sweep_retained()`（诊断性阈值扫描，无循环论证）
+- `utils/filtering.py` — 新增 `filter_by_expr()`（edgeR filterByExpr 等价实现：阈值由文库大小和分组大小推导，不依赖 DE 结果）和 `threshold_sweep_retained()`（诊断性阈值扫描，展示不同阈值下保留基因数，无循环论证）
 - `utils/pca_utils.py` — 新增 `variance_decomposition()`（类 PVCA 方法：通过加权偏 R² 量化批次、实验条件等因素对总方差的贡献百分比）
-- `utils/enrichment_utils.py` — 新增 `rank_by_statistic()` 和 `run_gsea_permutation()`（完整 GSEA：基因标签置换、NES 归一化、置换 p 值、BH-FDR 校正）
+- `utils/enrichment_utils.py` — 新增 `rank_by_statistic()`（用检验统计量对基因排序，用于 GSEA 输入）和 `run_gsea_permutation()`（完整 GSEA：基因标签置换、NES 归一化、置换 p 值、BH-FDR 校正）
 
 **更新页面** *（所有原有内容均保留）*
 
-- **第3课 — 低表达基因过滤**：新增"数据驱动阈值（filterByExpr 方法）"模块
-- **第5课 — 探索性分析与 PCA**：新增"方差分解"模块
-- **第9课 — 功能富集分析**：新增"基于置换检验的 GSEA（NES + p 值）"模块
+- **第3课 — 低表达基因过滤**：新增"数据驱动阈值（filterByExpr 方法）"模块——解释为何用 DE 结果优化阈值是循环论证；展示阈值 vs 保留基因数的诊断图
+- **第5课 — 探索性分析与 PCA**：新增"方差分解"模块——各因素方差贡献柱状图与表格；辅助判断是否需要批次校正
+- **第9课 — 功能富集分析**：新增"基于置换检验的 GSEA（NES + p 值）"模块——置换 NES、p 值、FDR；ORA vs GSEA 对比表；NES 条形图
 
 ---
 

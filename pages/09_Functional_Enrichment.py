@@ -15,6 +15,8 @@ import plotly.graph_objects as go
 from utils.data_loader import init_session_data, load_demo_data
 from utils.enrichment_utils import (
     TOY_GENE_SETS, run_ora, run_gsea_like, get_running_sum, demo_ranked_genes,
+    GENESET_SOURCES, load_gene_sets, detect_gene_id_format,
+    run_gsea_permutation, rank_by_statistic,
 )
 
 st.set_page_config(
@@ -112,11 +114,64 @@ else:
         st.error(f"无法生成演示排名：{e}")
         have_de = False
 
+# ── 基因 ID 格式检测 ─────────────────────────────────────────────────────────
+gene_fmt = detect_gene_id_format(counts.index)
+if gene_fmt == "ensembl":
+    st.warning(
+        "⚠️ 你的计数矩阵似乎使用的是 **Ensembl ID**（ENSG...）。"
+        "MSigDB GMT 文件使用 HGNC 基因符号——对真实通路数据库的富集分析将几乎无法匹配。"
+        "请先进行基因 ID 转换。"
+    )
+elif gene_fmt == "symbol":
+    st.success(
+        "✅ 基因 ID 看起来是 **HGNC 基因符号**——与 MSigDB GMT 文件兼容。",
+        icon="🧬",
+    )
+
+# ── 通路数据库选择器 ───────────────────────────────────────────────────────────
+st.markdown("#### 🗂️ 选择通路数据库")
 st.caption(
-    f"**通路库：** {len(TOY_GENE_SETS)} 条内置教学通路 "
-    f"（所有通路共 {sum(len(v) for v in TOY_GENE_SETS.values())} 个基因）。"
-    "这些仅用于教学——不是真正的 GO/MSigDB 数据库。"
+    "**教学通路集**仅用于演示 ORA/GSEA 原理，不具备生物学验证意义。"
+    "**MSigDB Hallmark** 包含 50 个简洁、内聚的生物学过程特征基因集。"
+    "**MSigDB C2:CP** 包含 4115 条来自 Reactome、WikiPathways、KEGG 等的标准通路。"
 )
+
+gs_label = st.radio(
+    "通路数据库",
+    options=list(GENESET_SOURCES.keys()),
+    index=0,
+    horizontal=False,
+    label_visibility="collapsed",
+)
+gs_key = GENESET_SOURCES[gs_label]
+
+try:
+    active_gene_sets, gs_display_name, n_gs = load_gene_sets(gs_key)
+    if gs_key == "toy":
+        st.caption(
+            f"📚 **{gs_display_name}** — {n_gs} 条通路，仅供教学。"
+        )
+    else:
+        st.caption(
+            f"🧬 **{gs_display_name}** — 已从本地 GMT 文件加载 {n_gs:,} 条基因集。"
+        )
+        if gs_key == "c2cp":
+            filter_prefix = st.text_input(
+                "按前缀过滤通路（可选）",
+                value="",
+                placeholder="例：REACTOME_ 或 KEGG_ 或 WP_",
+                help="留空则使用全部 C2:CP 通路。输入前缀可聚焦于某一子集。"
+            )
+            if filter_prefix.strip():
+                prefix = filter_prefix.strip().upper()
+                active_gene_sets = {k: v for k, v in active_gene_sets.items()
+                                    if k.upper().startswith(prefix)}
+                st.caption(f"已过滤至 **{len(active_gene_sets):,}** 条匹配 '{prefix}' 的通路。")
+except FileNotFoundError as e:
+    st.error(str(e))
+    active_gene_sets = TOY_GENE_SETS
+    gs_display_name  = "教学通路集（后备）"
+    n_gs = len(TOY_GENE_SETS)
 
 st.divider()
 
@@ -196,7 +251,7 @@ st.caption(
 universe = counts.index.tolist()
 
 with st.spinner("正在运行 ORA…"):
-    ora_res = run_ora(gene_list_for_ora, TOY_GENE_SETS, universe=universe)
+    ora_res = run_ora(gene_list_for_ora, active_gene_sets, universe=universe)
 
 if ora_res.empty:
     st.warning("未找到通路重叠。请尝试更大的基因列表或不同的来源。")
@@ -252,7 +307,7 @@ st.caption(
 )
 
 with st.spinner("正在运行 GSEA 类评分…"):
-    gsea_res = run_gsea_like(ranked_series.index, TOY_GENE_SETS, lfc_weights)
+    gsea_res = run_gsea_like(ranked_series.index, active_gene_sets, lfc_weights)
 
 if gsea_res.empty:
     st.warning("未产生富集结果。")
@@ -281,7 +336,7 @@ else:
         "选择要绘图的通路：", pathway_labels, index=0
     )
     selected_pathway = pathway_options[pathway_labels.index(selected_label)]
-    pathway_genes    = TOY_GENE_SETS[selected_pathway]
+    pathway_genes    = active_gene_sets[selected_pathway]
 
     rs = get_running_sum(ranked_series.index, pathway_genes, lfc_weights)
     ranks = list(range(1, len(rs) + 1))
@@ -424,7 +479,7 @@ if run_perm or "perm_gsea_result" in st.session_state:
         with st.spinner(f"正在运行 {n_perm} 次置换…"):
             perm_result = run_gsea_permutation(
                 ranked_for_perm,
-                gene_sets=TOY_GENE_SETS,
+                gene_sets=active_gene_sets,
                 n_permutations=n_perm,
                 random_state=42,
                 min_set_size=min_set,
