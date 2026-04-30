@@ -172,6 +172,14 @@ D01_treatment, treatment, D01,   batch1, F,   37
         """)
         st.info("输入数据必须是**原始计数值**，不能是 TPM/FPKM/CPM。归一化数值会导致验证错误或分析结果不正确。", icon="⚠️")
 
+        st.info(
+            "🔄 **上传新文件后结果未更新？请清除缓存。** "
+            "Mac：Cmd + Shift + R  |  Windows：Ctrl + Shift + R  |  "
+            "或点击页面右上角菜单选择 Clear cache。"
+            "适用情况：（1）上传了新数据但页面仍显示旧结果；"
+            "（2）分析结果看起来异常。清除缓存可强制重新计算所有内容。"
+        )
+
         counts_file   = st.file_uploader("上传 counts.csv",   type="csv", key="upload_counts")
         metadata_file = st.file_uploader("上传 metadata.csv", type="csv", key="upload_meta")
 
