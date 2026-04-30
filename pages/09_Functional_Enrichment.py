@@ -156,6 +156,11 @@ try:
             f"🧬 **{gs_display_name}** — 已从本地 GMT 文件加载 {n_gs:,} 条基因集。"
         )
         if gs_key == "c2cp":
+            st.warning(
+                "⏳ **C2:CP 包含 4,115 条基因集，数据量较大。** ORA 和 GSEA 分析可能需要 "
+                "30-60 秒才能完成，请耐心等待。"
+                "建议使用下方前缀过滤（如 REACTOME_）缩小范围以加快运行速度。"
+            )
             filter_prefix = st.text_input(
                 "按前缀过滤通路（可选）",
                 value="",
