@@ -484,7 +484,7 @@ ORA 找不到这条通路；而 GSEA 能看到这 12 个基因都集中在排序
 """)
 
 with st.spinner("正在运行差异表达分析以生成 GSEA 排序…"):
-    de_for_gsea = run_de(counts, metadata, fdr_cutoff=0.05, lfc_cutoff=0.5)
+    de_for_gsea = st.session_state.get("de_results") or run_de(counts, metadata, fdr_cutoff=0.05, lfc_cutoff=0.5)
 
 if "stat" not in de_for_gsea.columns:
     de_for_gsea["stat"] = de_for_gsea["log2FC"] / (
