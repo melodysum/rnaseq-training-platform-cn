@@ -135,7 +135,7 @@ de_results = cached_de(
     str(counts_use.shape), ref_group, target_group,
     use_batch, fdr_cutoff, lfc_cutoff,
 )
-
+st.session_state["de_results"] = de_results
 # ── 第三节 — 结果摘要 ────────────────────────────────────────────────────────
 st.subheader("📊 第三节 — 差异表达结果概览")
 
